@@ -13,7 +13,7 @@ public abstract class BasePlayground {
 	private CountDownLatch lock;
 
 	protected void waitForObservable() {
-
+		waitForObservable(1);
 	}
 
 	protected void waitForObservable(int count) {
@@ -30,5 +30,9 @@ public abstract class BasePlayground {
 			return;
 		}
 		lock.countDown();
+	}
+
+	protected String attachWithTid(String text) {
+		return "[Tid : " + Thread.currentThread() + "] " + text;
 	}
 }
