@@ -12,24 +12,32 @@ public abstract class BasePlayground {
 	@Nullable
 	private CountDownLatch lock;
 
-	protected void waitForObservable() {
-		waitForObservable(1);
+	protected void prepareLock() {
+		prepareLock(1);
 	}
-
-	protected void waitForObservable(int count) {
+	protected void prepareLock(int count) {
 		lock = new CountDownLatch(count);
-		try {
-			lock.await();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
 	}
 
-	protected void stopWaitingForObservable() {
+	protected void releaseLock() {
 		if (lock == null) {
 			return;
 		}
+
 		lock.countDown();
+	}
+
+	protected boolean waitForLock() {
+		if (lock == null) {
+			return false;
+		}
+		try {
+			lock.await();
+			return true;
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 
 	protected String attachWithTid(String text) {

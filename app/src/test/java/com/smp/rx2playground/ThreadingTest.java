@@ -15,6 +15,8 @@ public class ThreadingTest extends BasePlayground {
 	@Test
 	public void testScheduler() {
 
+		prepareLock();
+
 		Observable<Integer> observable = Observable.create(subscriber -> {
 			subscriber.onNext(1);
 			subscriber.onNext(2);
@@ -34,14 +36,14 @@ public class ThreadingTest extends BasePlayground {
 			.subscribe(nextValue -> System.out.println(attachWithTid("subscribed : " + nextValue)),
 				error -> {
 					attachWithTid("error occurred : " + error.getMessage());
-					stopWaitingForObservable();
+					releaseLock();
 				},
 				() -> {
 					attachWithTid("complete");
-					stopWaitingForObservable();
+					releaseLock();
 				});
 
-		waitForObservable();
+		waitForLock();
 
 	}
 }
