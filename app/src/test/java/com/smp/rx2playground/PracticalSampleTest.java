@@ -2,15 +2,10 @@ package com.smp.rx2playground;
 
 import java.util.Locale;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
 import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.annotations.NonNull;
-import io.reactivex.functions.Function;
-import io.reactivex.functions.Function4;
 import io.reactivex.schedulers.Schedulers;
 
 /**
@@ -29,13 +24,13 @@ public class PracticalSampleTest extends BasePlayground {
 		prepareLock();
 
 		Observable.zip(
-			sampleApi.loadTemperature(),
-			sampleApi.loadHumidity(),
-			sampleApi.loadPM10(),
-			sampleApi.loadPM2_5(),
+			sampleApi.loadTemperature().subscribeOn(Schedulers.io()),
+			sampleApi.loadHumidity().subscribeOn(Schedulers.io()),
+			sampleApi.loadPM10().subscribeOn(Schedulers.io()),
+			sampleApi.loadPM2_5().subscribeOn(Schedulers.io()),
 			AirQuality::new)
-			.repeat(10)
-			.take(10)
+			.repeat(1)
+			.take(1)
 			.subscribeOn(Schedulers.io())
 			.observeOn(Schedulers.computation())
 			.subscribe(airConditioner::updateAirQuality, throwable -> releaseLock(), this::releaseLock);
@@ -44,7 +39,7 @@ public class PracticalSampleTest extends BasePlayground {
 
 	}
 
-	private static class ReactiveSampleApi {
+	private class ReactiveSampleApi {
 
 		private LegacySampleAPI legacySampleAPI = new LegacySampleAPI();
 
@@ -65,12 +60,13 @@ public class PracticalSampleTest extends BasePlayground {
 		}
 	}
 
-	private static class LegacySampleAPI {
+	private class LegacySampleAPI {
 
 		private Random random = new Random(System.currentTimeMillis());
 
 		public Temperature loadTemperature() {
 			try {
+				System.out.println(attachWithTid("measure temperature"));
 				Thread.sleep(200);
 			} catch (InterruptedException e) {
 				throw new RuntimeException("Failed to load temperature");
@@ -80,6 +76,7 @@ public class PracticalSampleTest extends BasePlayground {
 
 		public Humidity loadHumidity() {
 			try {
+				System.out.println(attachWithTid("measure humidity"));
 				Thread.sleep(400);
 			} catch (InterruptedException e) {
 				throw new RuntimeException("Failed to load humidity");
@@ -89,6 +86,7 @@ public class PracticalSampleTest extends BasePlayground {
 
 		public PM10 loadPM10() {
 			try {
+				System.out.println(attachWithTid("measure pm10"));
 				Thread.sleep(500);
 			} catch (InterruptedException e) {
 				throw new RuntimeException("Failed to load pm 10");
@@ -98,6 +96,7 @@ public class PracticalSampleTest extends BasePlayground {
 
 		public PM2_5 loadPM2_5() {
 			try {
+				System.out.println(attachWithTid("measure pm2.5"));
 				Thread.sleep(900);
 			} catch (InterruptedException e) {
 				throw new RuntimeException("Failed to load pm 2.5");
@@ -106,12 +105,12 @@ public class PracticalSampleTest extends BasePlayground {
 		}
 	}
 
-	private static class AirConditioner {
+	private class AirConditioner {
 
 		private AirConditioningMode mode = AirConditioningMode.MODE_NONE;
 
 		public void updateAirQuality(AirQuality airQuality) {
-			System.out.println("Air condition is updated : " + airQuality.toString());
+			System.out.println(attachWithTid("Air condition is updated : " + airQuality.toString()));
 
 			if (airQuality.pm10.value > 80 || airQuality.pm2_5.value > 80) {
 				changeMode(AirConditioningMode.MODE_AIR_CLEANING);
@@ -132,19 +131,20 @@ public class PracticalSampleTest extends BasePlayground {
 
 		private void changeMode(AirConditioningMode mode) {
 			this.mode = mode;
-			System.out.println("Air conditioning mode has been changed to " + this.mode);
+			System.out.println(attachWithTid("Air conditioning mode has been changed to " + this.mode));
 		}
 
-		enum AirConditioningMode {
-			MODE_NONE,
-			MODE_WARMING,
-			MODE_COOLING,
-			MODE_DEHUMIDIFYING,
-			MODE_AIR_CLEANING
-		}
 	}
 
-	private static class AirQuality {
+	private enum AirConditioningMode {
+		MODE_NONE,
+		MODE_WARMING,
+		MODE_COOLING,
+		MODE_DEHUMIDIFYING,
+		MODE_AIR_CLEANING
+	}
+
+	private class AirQuality {
 		private Temperature temperature;
 		private Humidity humidity;
 		private PM10 pm10;
@@ -156,6 +156,7 @@ public class PracticalSampleTest extends BasePlayground {
 			this.humidity = humidity;
 			this.pm10 = pm10;
 			this.pm2_5 = pm2_5;
+			System.out.println(attachWithTid("Zipping as AirQuality"));
 		}
 
 		@Override
@@ -168,6 +169,7 @@ public class PracticalSampleTest extends BasePlayground {
 
 	private static class Temperature {
 		private float value;
+
 		public Temperature(float value) {
 			this.value = value;
 		}
@@ -175,6 +177,7 @@ public class PracticalSampleTest extends BasePlayground {
 
 	private static class Humidity {
 		private float value;
+
 		public Humidity(float value) {
 			this.value = value;
 		}
@@ -182,6 +185,7 @@ public class PracticalSampleTest extends BasePlayground {
 
 	private static class PM10 {
 		private int value;
+
 		public PM10(int value) {
 			this.value = value;
 		}
@@ -189,6 +193,7 @@ public class PracticalSampleTest extends BasePlayground {
 
 	private static class PM2_5 {
 		private int value;
+
 		public PM2_5(int value) {
 			this.value = value;
 		}
