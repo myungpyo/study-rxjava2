@@ -19,6 +19,8 @@ public abstract class BasePlayground {
 	@Nullable
 	private CountDownLatch lock;
 
+	private long elapsedTime;
+
 	protected void prepareLock() {
 		prepareLock(1);
 	}
@@ -52,9 +54,21 @@ public abstract class BasePlayground {
 		return "[Tid : " + Thread.currentThread() + "] " + text;
 	}
 
+	protected void prepareElapsedTime() {
+		elapsedTime = System.currentTimeMillis();
+	}
+
+	protected String attachWithElapsedTime(String text) {
+		long currentTime = System.currentTimeMillis();
+		String timeString = "[Time : " + (currentTime - elapsedTime) + "ms] " + text;
+		elapsedTime = currentTime;
+		return timeString;
+	}
+
 	protected ExecutorService createFixedExecutor(String name, int coreThread, int maxThread) {
 		return Executors.newFixedThreadPool(5, new ThreadFactory() {
 			AtomicInteger seq = new AtomicInteger(0);
+
 			@Override
 			public Thread newThread(@NonNull Runnable r) {
 				String threadName = "Executor(" + name + ")#" + seq.incrementAndGet();
